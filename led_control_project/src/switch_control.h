@@ -19,30 +19,39 @@
  *
  * Purpose: NanoPi silly status led control system
  *
- * Author:  Daniel Gachet
- * Date:    07.11.2018
+ * Author:  Jonathan Amez-Droz
+ * Date:    11.04.2025
  */
 
-#include "silly_led_control.h"
 
-int open_led(){
-    // unexport pin out of sysfs (reinitialization)
-    int f = open(GPIO_UNEXPORT, O_WRONLY);
-    write(f, LED, strlen(LED));
-    close(f);
+/* Switches pining
+* k1 gpio_a.0-k1 
+* k2 gpio_a.2-k2
+* k3 gpio_a.3-k3
+*/
+#ifndef SWITCH_CONTROL_H
+#define SWITCH_CONTROL_H
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
+#include <stdio.h>
 
-    // export pin to sysfs
-    f = open(GPIO_EXPORT, O_WRONLY);
-    write(f, LED, strlen(LED));
-    close(f);
+#define K1 "0"
+#define K2 "2"
+#define K3 "3"
 
-    // config pin
-    f = open(GPIO_LED "/direction", O_WRONLY);
-    write(f, "out", 3);
-    close(f);
+#define GPIO_K1 "/sys/class/gpio/gpio0"
+#define GPIO_K2 "/sys/class/gpio/gpio2"
+#define GPIO_K3 "/sys/class/gpio/gpio3"
 
-    // open gpio value attribute
-    f = open(GPIO_LED "/value", O_RDWR);
-    return f;
-}
+#define GPIO_EXPORT   "/sys/class/gpio/export"
+#define GPIO_UNEXPORT "/sys/class/gpio/unexport"
 
+int open_switch(const char *pin, const char *gpio_path);
+
+#endif // SWITCH_CONTROL_H

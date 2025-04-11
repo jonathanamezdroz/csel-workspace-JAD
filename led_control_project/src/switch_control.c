@@ -19,30 +19,34 @@
  *
  * Purpose: NanoPi silly status led control system
  *
- * Author:  Daniel Gachet
- * Date:    07.11.2018
+ * Author:  Jonathan Amez-Droz
+ * Date:    11.04.2025
  */
 
-#include "silly_led_control.h"
+#include "switch_control.h"
 
-int open_led(){
+int open_switch(const char *pin, const char *gpio_path){
     // unexport pin out of sysfs (reinitialization)
     int f = open(GPIO_UNEXPORT, O_WRONLY);
-    write(f, LED, strlen(LED));
+    write(f, pin, strlen(pin));
     close(f);
 
     // export pin to sysfs
     f = open(GPIO_EXPORT, O_WRONLY);
-    write(f, LED, strlen(LED));
+    write(f, pin, strlen(pin));
     close(f);
 
     // config pin
-    f = open(GPIO_LED "/direction", O_WRONLY);
-    write(f, "out", 3);
+    char gpio_dir[50];
+    snprintf(gpio_path, sizeof(gpio_path), "%s/direction", gpio_dir);
+    f = open(GPIO_K3 "/direction", O_WRONLY);
+    write(f, "in", 3);
     close(f);
 
+    char gpio_value[50];
+    snprintf(gpio_path, sizeof(gpio_path), "%s/value", gpio_value);
     // open gpio value attribute
-    f = open(GPIO_LED "/value", O_RDWR);
+    f = open(GPIO_K3 "/value", O_RDONLY);
     return f;
-}
 
+}

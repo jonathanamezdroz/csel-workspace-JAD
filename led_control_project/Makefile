@@ -9,6 +9,8 @@ CFLAGS=-Wall -Wextra
 
 OBJS_SRC:=$(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
+app: make_dir $(BUILD_DIR)/app
+
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $< $(INCL_SRC)
 
@@ -17,8 +19,6 @@ $(BUILD_DIR)/main.o: main.c
 
 $(BUILD_DIR)/app: $(OBJS_SRC) $(BUILD_DIR)/main.o
 	$(CC) $(CFLAGS) -o $@ $^
-
-app: make_dir $(BUILD_DIR)/app
 
 make_dir:
 	mkdir -p $(BUILD_DIR)
