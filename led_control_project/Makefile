@@ -5,7 +5,7 @@ BUILD_DIR=./build
 INCL_SRC=-I$(SRC_DIR)/
 
 CC=/buildroot/output/host/bin/aarch64-linux-gcc
-CFLAGS=-Wall -Wextra
+CFLAGS=-Wall -Wextra -Werror
 
 OBJS_SRC:=$(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRC_FILES))
 
