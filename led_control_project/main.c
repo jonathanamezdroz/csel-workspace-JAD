@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "silly_led_control.h"

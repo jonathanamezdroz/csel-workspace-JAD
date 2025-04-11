@@ -1,12 +1,7 @@
 #ifndef SILLY_LED_CONTROL_H
 #define SILLY_LED_CONTROL_H
-#include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 /*

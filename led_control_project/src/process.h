@@ -1,5 +1,7 @@
 #ifndef PROCESS_H
 #define PROCESS_H
+#include <time.h>
+#include <unistd.h>
 
 #include "silly_led_control.h"
 
