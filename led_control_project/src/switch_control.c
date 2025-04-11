@@ -38,15 +38,15 @@ int open_switch(const char *pin, const char *gpio_path){
 
     // config pin
     char gpio_dir[50];
-    snprintf(gpio_path, sizeof(gpio_path), "%s/direction", gpio_dir);
-    f = open(GPIO_K3 "/direction", O_WRONLY);
+    snprintf(gpio_dir, 50, "%s/direction", gpio_path);
+    f = open(gpio_dir, O_WRONLY);
     write(f, "in", 3);
     close(f);
 
     char gpio_value[50];
-    snprintf(gpio_path, sizeof(gpio_path), "%s/value", gpio_value);
+    snprintf(gpio_value, 50, "%s/value",  gpio_path);
     // open gpio value attribute
-    f = open(GPIO_K3 "/value", O_RDONLY);
+    f = open(gpio_value, O_RDONLY);
     return f;
 
 }
