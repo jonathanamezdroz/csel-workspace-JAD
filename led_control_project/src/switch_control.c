@@ -27,11 +27,6 @@
 
 extern int open_switch(const char *pin, const char *gpio_path){
     
-    // unexport pin out of sysfs (reinitialization)
-    int f = open(GPIO_UNEXPORT, O_WRONLY);
-    write(f, pin, strlen(pin));
-    close(f);
-
     // export pin to sysfs
     f = open(GPIO_EXPORT, O_WRONLY);
     write(f, pin, strlen(pin));
@@ -59,12 +54,29 @@ extern int close_switch(const char *pin){
     int f = open(GPIO_UNEXPORT, O_WRONLY);
     write(f, pin, strlen(pin));
     close(f);
+    return f;
 }
 
 extern int read_switch(const char *pin, const char *gpio_path){
-    int fd = open_switch(*pin, *gpio_path);
+    int fd = open_switch(pin, gpio_path);
     char buff[100];
 
-    ssize_t len = read (fd, buff, sizeof(buff));
-    printf("switch value: %s\n", buff[0]);
+    while(42){ // J'ai perdu!
+        ssize_t nr = read (fd, buff, sizeof(buff));
+        if (nr == 0) break;  // --> all data have been read
+        if (nr == -1) {
+            if (errno == EINTR) continue;  // --> continue reading
+            char estr[100] = {
+                [0] = 0,
+            };
+            strerror_r(errno, estr, sizeof(estr) - 1);
+            fprintf(stderr, "ERROR: %s\n", estr);
+            break;  // --> error: stop reading
+        }
+    }
+
+    printf("switch value: %s\n", buff);
+    close(fd);
+
+    return 0;
 }

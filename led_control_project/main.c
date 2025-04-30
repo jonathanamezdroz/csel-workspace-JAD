@@ -11,11 +11,8 @@
 int main(int argc, char** argv){
 
     int switch_status;
-
-    switch_status = open_switch(K1, GPIO_K1);
-
+    switch_status = read_switch(K1, GPIO_K1);
     printf("switch status: %d\n", switch_status);
-
     
     printf("hello there\n");
     long period=1000;
