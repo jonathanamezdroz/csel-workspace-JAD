@@ -41,6 +41,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
+
 #define K1 "0"
 #define K2 "2"
 #define K3 "3"
@@ -52,6 +53,8 @@
 #define GPIO_EXPORT   "/sys/class/gpio/export"
 #define GPIO_UNEXPORT "/sys/class/gpio/unexport"
 
-int open_switch(const char *pin, const char *gpio_path);
+extern int open_switch(const char *pin, const char *gpio_path);
+extern int read_switch(const char *pin, const char *gpio_path);
+extern int close_switch(const char *pin);
 
 #endif // SWITCH_CONTROL_H

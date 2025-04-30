@@ -25,7 +25,8 @@
 
 #include "switch_control.h"
 
-int open_switch(const char *pin, const char *gpio_path){
+extern int open_switch(const char *pin, const char *gpio_path){
+    
     // unexport pin out of sysfs (reinitialization)
     int f = open(GPIO_UNEXPORT, O_WRONLY);
     write(f, pin, strlen(pin));
@@ -47,6 +48,23 @@ int open_switch(const char *pin, const char *gpio_path){
     snprintf(gpio_value, 50, "%s/value",  gpio_path);
     // open gpio value attribute
     f = open(gpio_value, O_RDONLY);
+    //Ici ça print le file descriptor et non le contenu du fichier!!
+    //Faut que ça retourne le contenu et non le file descriptor
     return f;
 
+}
+
+extern int close_switch(const char *pin){
+    // unexport pin out of sysfs (reinitialization)
+    int f = open(GPIO_UNEXPORT, O_WRONLY);
+    write(f, pin, strlen(pin));
+    close(f);
+}
+
+extern int read_switch(const char *pin, const char *gpio_path){
+    int fd = open_switch(*pin, *gpio_path);
+    char buff[100];
+
+    ssize_t len = read (fd, buff, sizeof(buff));
+    printf("switch value: %s\n", buff[0]);
 }
