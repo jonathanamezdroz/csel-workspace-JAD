@@ -12,8 +12,8 @@ int main(int argc, char** argv){
 
     int switch_status;
     switch_status = read_switch(K1, GPIO_K1);
-    printf("switch status: %d\n", switch_status);
-    
+    printf("switch value on %s: %d\n",GPIO_K1, switch_status);
+    close_switch(K1);
     printf("hello there\n");
     long period=1000;
     if(argc>=2){

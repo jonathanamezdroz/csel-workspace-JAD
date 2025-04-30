@@ -26,9 +26,8 @@
 #include "switch_control.h"
 
 extern int open_switch(const char *pin, const char *gpio_path){
-    
     // export pin to sysfs
-    f = open(GPIO_EXPORT, O_WRONLY);
+    int f = open(GPIO_EXPORT, O_WRONLY);
     write(f, pin, strlen(pin));
     close(f);
 
@@ -75,8 +74,7 @@ extern int read_switch(const char *pin, const char *gpio_path){
         }
     }
 
-    printf("switch value: %s\n", buff);
     close(fd);
 
-    return 0;
+    return buff[0] - '0'; // convert char to int
 }
