@@ -38,12 +38,22 @@ extern int open_switch(const char *pin, const char *gpio_path){
     write(f, "in", 3);
     close(f);
 
+    char gpio_edge[50];
+    snprintf(gpio_edge, 50, "%s/edge", gpio_path);
+    printf("edge: %s\n", gpio_edge);
+    f = open(gpio_edge, O_WRONLY);
+    if(f == -1){
+        perror("open");
+        return -1;
+    }
+    write(f, "rising", 7);
+
+    close(f);
+
     char gpio_value[50];
     snprintf(gpio_value, 50, "%s/value",  gpio_path);
     // open gpio value attribute
     f = open(gpio_value, O_RDONLY);
-    //Ici ça print le file descriptor et non le contenu du fichier!!
-    //Faut que ça retourne le contenu et non le file descriptor
     return f;
 
 }
@@ -53,28 +63,31 @@ extern int close_switch(const char *pin){
     int f = open(GPIO_UNEXPORT, O_WRONLY);
     write(f, pin, strlen(pin));
     close(f);
+    
     return f;
 }
 
-extern int read_switch(const char *pin, const char *gpio_path){
-    int fd = open_switch(pin, gpio_path);
-    char buff[100];
+extern int read_switch(int fd){
+
+    char buff[5];
+    // Réinitialiser la position du curseur de lecture
+    if (lseek(fd, 0, SEEK_SET) == -1) {
+        perror("lseek");
+        return -1;
+    }
 
     while(42){ // J'ai perdu!
-        ssize_t nr = read (fd, buff, sizeof(buff));
-        if (nr == 0) break;  // --> all data have been read
+        ssize_t nr = read (fd, buff, sizeof(buff) -1);
+        if (nr == 0) break;  // all data have been read
         if (nr == -1) {
-            if (errno == EINTR) continue;  // --> continue reading
+            if (errno == EINTR) continue;  // continue reading
             char estr[100] = {
                 [0] = 0,
             };
             strerror_r(errno, estr, sizeof(estr) - 1);
             fprintf(stderr, "ERROR: %s\n", estr);
-            break;  // --> error: stop reading
+            break;  // stop reading
         }
     }
-
-    close(fd);
-
     return buff[0] - '0'; // convert char to int
 }

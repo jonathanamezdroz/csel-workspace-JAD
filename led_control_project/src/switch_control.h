@@ -54,7 +54,7 @@
 #define GPIO_UNEXPORT "/sys/class/gpio/unexport"
 
 extern int open_switch(const char *pin, const char *gpio_path);
-extern int read_switch(const char *pin, const char *gpio_path);
+extern int read_switch(int fd);
 extern int close_switch(const char *pin);
 
 #endif // SWITCH_CONTROL_H

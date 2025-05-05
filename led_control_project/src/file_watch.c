@@ -10,7 +10,7 @@ int open_epoll() {
 
 void add_watch(int epfd, int fd){
     struct epoll_event event = {
-        .events = EPOLLIN | EPOLLET,
+        .events = EPOLLPRI, // Edge-triggered
         .data.fd = fd,
     };
 
@@ -19,20 +19,31 @@ void add_watch(int epfd, int fd){
         perror("epoll_ctl");
         close(epfd);
     }
+    //read the file to clear any previous event
+    read_switch(fd);
 }
 
 // Fonction pour surveiller les modifications d'un fichier
-int file_polling(int epfd) {
-
-    struct epoll_event events[2]; //tableau pour stocker les événements
-    int nr = epoll_wait(epfd, events, 2, -1);
-    if (nr == -1)
+int file_polling(int epfd, int fd) {
+    printf("polling file\n");
+    struct epoll_event events[MAX_EVENTS]; //tableau pour stocker les événements
+    int gpio_val = -1;
+    int nr = epoll_wait(epfd, events, MAX_EVENTS, -1);
+    if (nr == -1){
         /* error*/
         perror("epoll_wait");
+    }
+    
     for (int i=0; i<nr; i++) {
         printf ("event=%u on fd=%d\n", events[i].events, events[i].data.fd);
+        //make sure event come from the correct fd
+        if (events[i].data.fd == fd) { 
+            printf("Event on fd %d\n", events[i].data.fd);
+            gpio_val = read_switch(events[i].data.fd);
+            break;
+        }
         // operation on events[i].data.fd can be performed without blocking...
     }
-    return 0;
-    close(epfd);
+    return gpio_val;
+    
 }
