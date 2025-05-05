@@ -3,12 +3,21 @@
 
 #include "silly_led_control.h"
 #include "switch_control.h"
+#include "file_watch.h"
 
 #include "process.h"
 
 
 
 int main(int argc, char** argv){
+    int fd = open_switch(K1, GPIO_K1);
+    //fd = open("tmp/file", O_RDWR);
+    int epfd = open_epoll();
+    add_watch(epfd, fd);
+
+
+    file_polling(epfd);
+
 
     int switch_status;
     switch_status = read_switch(K1, GPIO_K1);

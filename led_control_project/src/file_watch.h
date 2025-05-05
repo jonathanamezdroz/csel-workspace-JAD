@@ -5,6 +5,9 @@
 #include <string.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <sys/epoll.h>
 
-extern int surveiller_fichier(const char *filename);
+extern int open_epoll();
+extern int file_polling(int epfd);
+extern void add_watch(int epfd, int fd);
 

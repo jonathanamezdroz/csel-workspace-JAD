@@ -1,53 +1,38 @@
 #include "file_watch.h"
+int open_epoll() {
+    int epfd = epoll_create1(0);
+    if (epfd == -1) {
+        perror("epoll_create1");
+        return -1;
+    }
+    return epfd;
+}
+
+void add_watch(int epfd, int fd){
+    struct epoll_event event = {
+        .events = EPOLLIN | EPOLLET,
+        .data.fd = fd,
+    };
+
+    int ret = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);
+    if (ret == -1) {
+        perror("epoll_ctl");
+        close(epfd);
+    }
+}
+
 // Fonction pour surveiller les modifications d'un fichier
-int surveiller_fichier(const char *filename) {
-    // Initialiser inotify en mode non bloquant
-    int ifd = inotify_init1(IN_NONBLOCK);
-    if (ifd == -1) {
-        perror("inotify_init1");
-        return -1;
+int file_polling(int epfd) {
+
+    struct epoll_event events[2]; //tableau pour stocker les événements
+    int nr = epoll_wait(epfd, events, 2, -1);
+    if (nr == -1)
+        /* error*/
+        perror("epoll_wait");
+    for (int i=0; i<nr; i++) {
+        printf ("event=%u on fd=%d\n", events[i].events, events[i].data.fd);
+        // operation on events[i].data.fd can be performed without blocking...
     }
-
-    // Ajouter une surveillance sur le fichier
-    int wd = inotify_add_watch(ifd, filename, IN_MODIFY);
-    if (wd == -1) {
-        perror("inotify_add_watch");
-        close(ifd);
-        return -1;
-    }
-
-    char buff[sizeof(struct inotify_event) + NAME_MAX + 1];
-    ssize_t len;
-
-    printf("Surveillance du fichier : %s\n", filename);
-
-    while (1) {
-        len = read(ifd, buff, sizeof(buff));
-        if (len == -1) {
-            if (errno == EAGAIN) {
-                // Aucune donnée disponible, attendre ou faire autre chose
-                sleep(1); // Attendre un court moment avant de réessayer
-                continue;
-            } else {
-                perror("read");
-                inotify_rm_watch(ifd, wd);
-                close(ifd);
-                return -1;
-            }
-        } else if (len == 0) {
-            // Fin de fichier ou aucune donnée lue
-            break;
-        } else {
-            // Traiter les données lues depuis le descripteur de fichier inotify
-            struct inotify_event *event = (struct inotify_event *)buff;
-            if (event->len) {
-                printf("Modification détectée dans le fichier : %s\n", event->name);
-            }
-        }
-    }
-
-    // Supprimer la surveillance
-    inotify_rm_watch(ifd, wd);
-    close(ifd);
     return 0;
+    close(epfd);
 }
