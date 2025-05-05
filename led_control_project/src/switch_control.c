@@ -40,7 +40,6 @@ extern int open_switch(const char *pin, const char *gpio_path){
 
     char gpio_edge[50];
     snprintf(gpio_edge, 50, "%s/edge", gpio_path);
-    printf("edge: %s\n", gpio_edge);
     f = open(gpio_edge, O_WRONLY);
     if(f == -1){
         perror("open");

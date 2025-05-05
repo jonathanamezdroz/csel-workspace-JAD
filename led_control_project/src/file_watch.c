@@ -25,7 +25,6 @@ void add_watch(int epfd, int fd){
 
 // Fonction pour surveiller les modifications d'un fichier
 int file_polling(int epfd, int fd) {
-    printf("polling file\n");
     struct epoll_event events[MAX_EVENTS]; //tableau pour stocker les événements
     int gpio_val = -1;
     int nr = epoll_wait(epfd, events, MAX_EVENTS, -1);
@@ -35,10 +34,9 @@ int file_polling(int epfd, int fd) {
     }
     
     for (int i=0; i<nr; i++) {
-        printf ("event=%u on fd=%d\n", events[i].events, events[i].data.fd);
+        //printf ("event=%u on fd=%d\n", events[i].events, events[i].data.fd);
         //make sure event come from the correct fd
         if (events[i].data.fd == fd) { 
-            printf("Event on fd %d\n", events[i].data.fd);
             gpio_val = read_switch(events[i].data.fd);
             break;
         }
