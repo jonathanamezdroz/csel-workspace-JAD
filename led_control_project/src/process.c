@@ -34,3 +34,38 @@ void silly_process(long period){
     }
     return;
 }
+
+static int MAX_EVENT_FOR_SINGLE_LOOP = 8;
+static int EPOLL_WAIT_TIMEOUT = -1; // wait forever until an event occurs
+
+void epoll_process(long period){
+    (void)period;
+    int i, epoll_status, tmp_fd;
+    struct epoll_event events[MAX_EVENT_FOR_SINGLE_LOOP];
+    int epoll_fd = epoll_create1(0);
+    // create fd and define associated events
+    // epoll_ctl(epoll_fd, EPOLL_FD_ADD, new_fd, new_fd_events);
+    while(1){
+        epoll_status = epoll_wait(epoll_fd, events, MAX_EVENT_FOR_SINGLE_LOOP, EPOLL_WAIT_TIMEOUT);
+        if(epoll_status > 0){
+            for(i=0;i<epoll_status;i++){
+                tmp_fd = events[i].data.fd;
+                // execute behaviour for fd
+                syslog(LOG_NOTICE, "event for %d fd id", tmp_fd);
+            }
+            // manage event here
+        }else if(0 == epoll_status){
+            //timeout
+        }else{
+            if( EINTR == errno ){
+                // ignorable errors
+                continue;
+            }else{
+                // other errors
+                break;
+            }
+        }
+    }
+    // good practice would require to unregister file descriptors and free them
+    return;
+}
