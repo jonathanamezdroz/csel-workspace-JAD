@@ -7,6 +7,8 @@
 #include <sys/epoll.h>
 
 #include "led_control.h"
+#include "switch_control.h"
+#include "timer_control.h"
 
 void silly_process(long period);
 void epoll_process(long period);

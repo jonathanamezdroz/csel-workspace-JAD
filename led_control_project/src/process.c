@@ -37,21 +37,43 @@ void silly_process(long period){
 
 static int MAX_EVENT_FOR_SINGLE_LOOP = 8;
 static int EPOLL_WAIT_TIMEOUT = -1; // wait forever until an event occurs
+#define READ_BUFFER_SIZE 128
+static int DUTY_CYCLE_ON = 50;
 
 void epoll_process(long period){
-    (void)period;
+    period *= 1000000;  // in ns
+
+    int timer_on_fd, timer_off_fd;
     int i, epoll_status, tmp_fd;
+    long tmp_long;
+    struct epoll_event tmp_event;
     struct epoll_event events[MAX_EVENT_FOR_SINGLE_LOOP];
     int epoll_fd = epoll_create1(0);
     // create fd and define associated events
-    // epoll_ctl(epoll_fd, EPOLL_FD_ADD, new_fd, new_fd_events);
+    // epoll_ctl(epoll_fd, EPOLL_CTL_ADD, new_fd, new_fd_events);
+    //timer to activate the led
+    timer_on_fd = start_timer(period, 0);
+    tmp_event.events = (EPOLLIN|EPOLLPRI);
+    tmp_event.data.fd = timer_on_fd;
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, timer_on_fd, &tmp_event);
+    //timer to deactivate the led
+    timer_off_fd = start_timer(period, DUTY_CYCLE_ON);
+    tmp_event.events = (EPOLLIN|EPOLLPRI);
+    tmp_event.data.fd = timer_off_fd;
+    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, timer_off_fd, &tmp_event);
     while(1){
         epoll_status = epoll_wait(epoll_fd, events, MAX_EVENT_FOR_SINGLE_LOOP, EPOLL_WAIT_TIMEOUT);
         if(epoll_status > 0){
             for(i=0;i<epoll_status;i++){
                 tmp_fd = events[i].data.fd;
                 // execute behaviour for fd
-                syslog(LOG_NOTICE, "event for %d fd id", tmp_fd);
+                if((tmp_fd == timer_on_fd) || (tmp_fd == timer_off_fd)){
+                    read(tmp_fd, &tmp_long, sizeof(tmp_long));
+                }else{
+                    break;
+                }
+                //syslog(LOG_NOTICE, "event for %d fd id", tmp_fd);
+                printf("event for %d\n", tmp_fd);
             }
             // manage event here
         }else if(0 == epoll_status){
