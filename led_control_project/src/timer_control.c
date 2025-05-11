@@ -17,3 +17,16 @@ int start_timer(long period, int delay_percentage){
     }else{}
     return ret;
 }
+
+int update_timer(int fd, long period, int delay_percentage){
+    struct itimerspec ts;
+    ts.it_value.tv_sec = (period / NS_TO_S) + (period / NS_TO_S) * delay_percentage / 100;
+    ts.it_value.tv_nsec = (period % NS_TO_S ) + (period % NS_TO_S) * delay_percentage / 100;
+    ts.it_interval.tv_sec = period / NS_TO_S;
+    ts.it_interval.tv_nsec = period % NS_TO_S;
+    if(timerfd_settime(fd, 0, &ts, NULL) < 0){
+        close(fd);
+        return EXIT_FAILURE;
+    }else{}
+    return EXIT_SUCCESS;
+}
