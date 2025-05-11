@@ -43,7 +43,8 @@ static int DUTY_CYCLE_ON = 50;
 void epoll_process(long period){
     period *= 1000000;  // in ns
 
-    int timer_on_fd, timer_off_fd;
+    int led_status;
+    int timer_on_fd, timer_off_fd, led_fd;
     int i, epoll_status, tmp_fd;
     long tmp_long;
     struct epoll_event tmp_event;
@@ -61,6 +62,9 @@ void epoll_process(long period){
     tmp_event.events = (EPOLLIN|EPOLLPRI);
     tmp_event.data.fd = timer_off_fd;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, timer_off_fd, &tmp_event);
+    //led fd
+    led_fd = open_led();
+    led_status = 1;
     while(1){
         epoll_status = epoll_wait(epoll_fd, events, MAX_EVENT_FOR_SINGLE_LOOP, EPOLL_WAIT_TIMEOUT);
         if(epoll_status > 0){
@@ -69,6 +73,8 @@ void epoll_process(long period){
                 // execute behaviour for fd
                 if((tmp_fd == timer_on_fd) || (tmp_fd == timer_off_fd)){
                     read(tmp_fd, &tmp_long, sizeof(tmp_long));
+                    write(led_fd, (led_status ? "1" : "0"), 1);
+                    led_status = !led_status;
                 }else{
                     break;
                 }
@@ -88,6 +94,6 @@ void epoll_process(long period){
             }
         }
     }
-    // good practice would require to unregister file descriptors and free them
+    // good practice would require to unregister file descriptors and close them
     return;
 }
