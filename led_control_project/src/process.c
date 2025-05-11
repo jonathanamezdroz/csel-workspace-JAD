@@ -92,15 +92,21 @@ void epoll_process(long period){
                     lseek(tmp_fd, 0, SEEK_SET);
                     read(tmp_fd, &buf, 1);
                     //reset if k2, reduce period if k1, increase period if k3
-                    current_period = ((tmp_fd == k2_fd) ? 
-                        default_period : (current_period - ((tmp_fd == k1_fd) ? delta_period : -delta_period)));
+                    if(tmp_fd == k1_fd){
+                        current_period -= delta_period;
+                        syslog(LOG_NOTICE, "increasing blinking frequency\n");
+                    }else if(tmp_fd == k2_fd){
+                        current_period = default_period;
+                        syslog(LOG_NOTICE, "reset blinking frequency\n");
+                    }else{
+                        current_period += delta_period;
+                        syslog(LOG_NOTICE, "lowering blinking frequency\n");
+                    }
                     update_timer(timer_on_fd, current_period, 0);
                     update_timer(timer_off_fd, current_period, DUTY_CYCLE_ON);
                 }else{
                     break;
                 }
-                //syslog(LOG_NOTICE, "event for %d fd id", tmp_fd);
-                printf("event for %d\n", tmp_fd);
             }
             // manage event here
         }else if(0 == epoll_status){
