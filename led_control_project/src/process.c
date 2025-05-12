@@ -40,8 +40,23 @@ static int EPOLL_WAIT_TIMEOUT = -1; // wait forever until an event occurs
 #define READ_BUFFER_SIZE 128
 static int DUTY_CYCLE_ON = 50;
 
+static void add_to_epoll(int epoll_fd, int fd, uint32_t flags){
+    long tmp_long;
+    struct epoll_event events = {
+        .events = flags,
+        .data.fd = fd
+    };
+    if(epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &events) < 0){
+        perror("epoll_ctl");
+        close(epoll_fd);
+    }else{
+        //consume any prior event
+        read(fd, &tmp_long, sizeof(tmp_long));
+    }
+}
+
 void epoll_process(long period){
-    long default_period = period *= 1000000;  // in ns
+    long default_period = period;   //ns
     long current_period = default_period;
     long delta_period = default_period * 10 / 100;  //10% of default period
     char buf;
@@ -49,32 +64,24 @@ void epoll_process(long period){
     int timer_on_fd, timer_off_fd, led_fd, k1_fd, k2_fd, k3_fd;
     int i, epoll_status, tmp_fd;
     long tmp_long;
-    struct epoll_event tmp_event;
     struct epoll_event events[MAX_EVENT_FOR_SINGLE_LOOP];
     int epoll_fd = epoll_create1(0);
     // create fd and define associated events
-    tmp_event.events = EPOLLPRI;
     //switch K1
     k1_fd = open_switch(K1, GPIO_K1);
-    tmp_event.data.fd = k1_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, k1_fd, &tmp_event);
+    add_to_epoll(epoll_fd, k1_fd, EPOLLPRI);
     //switch K2
     k2_fd = open_switch(K2, GPIO_K2);
-    tmp_event.data.fd = k2_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, k2_fd, &tmp_event);
+    add_to_epoll(epoll_fd, k2_fd, EPOLLPRI);
     //switch K3
     k3_fd = open_switch(K3, GPIO_K3);
-    tmp_event.data.fd = k3_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, k3_fd, &tmp_event);
-    tmp_event.events = EPOLLIN | EPOLLPRI;
+    add_to_epoll(epoll_fd, k3_fd, EPOLLPRI);
     //timer to activate the led
     timer_on_fd = start_timer(current_period, 0);
-    tmp_event.data.fd = timer_on_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, timer_on_fd, &tmp_event);
+    add_to_epoll(epoll_fd, timer_on_fd, EPOLLIN | EPOLLPRI);
     //timer to deactivate the led
     timer_off_fd = start_timer(current_period, DUTY_CYCLE_ON);
-    tmp_event.data.fd = timer_off_fd;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, timer_off_fd, &tmp_event);
+    add_to_epoll(epoll_fd, timer_off_fd, EPOLLIN | EPOLLPRI);
     //led fd
     led_fd = open_led();
     led_status = 1;

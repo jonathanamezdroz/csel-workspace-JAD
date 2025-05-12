@@ -11,9 +11,9 @@ int main(int argc, char** argv){
     printf("hello there\n");
     setlogmask(LOG_UPTO(LOG_NOTICE));   //discards info and debug
     openlog("app_epoll", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_LOCAL1);
-    long period=1000;
+    long period=500000;
     if(argc>=2){
-        period = atoi(argv[1]);
+        period = atoi(argv[1]) * 1000000;
     }else{}
     epoll_process(period);
     printf("have a nice day\n");
