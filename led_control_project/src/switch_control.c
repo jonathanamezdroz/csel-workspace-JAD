@@ -47,7 +47,7 @@ int open_switch(const char *pin, const char *gpio_path){
     char gpio_int[50];
     snprintf(gpio_int, 50, "%s/edge", gpio_path);
     f = open(gpio_int, O_WRONLY);
-    write(f, "both", 4);
+    write(f, "rising", 7);
     close(f);
 
     char gpio_value[50];
