@@ -77,9 +77,8 @@ void select_process(long period){
     int timer_on_fd, timer_off_fd, led_fd, k1_fd, k2_fd, k3_fd, largest_fd;
     char buf;
     long tmp_long;
-    fd_set fd_in;
+    fd_set fd_in, fd_except;
     struct timeval timeout = {.tv_sec = 5, .tv_usec = 0};
-    FD_ZERO(&fd_in);
     // create fd and define associated events
     //switch K1
     k1_fd = open_switch(K1, GPIO_K1);
@@ -101,16 +100,39 @@ void select_process(long period){
     led_fd = open_led();
     largest_fd = get_max_fd(5, timer_on_fd, timer_off_fd, k1_fd, k2_fd, k3_fd);
     while(1){
-        prepare_select_loop(&fd_in, 5, timer_on_fd, timer_off_fd, k1_fd, k2_fd, k3_fd);
+        prepare_select_loop(&fd_in, 2, timer_on_fd, timer_off_fd);
+        prepare_select_loop(&fd_except, 3, k1_fd, k2_fd, k3_fd);
         timeout.tv_sec = 5;
         timeout.tv_usec = 0;
-        select_status = select(largest_fd+1, &fd_in, NULL, NULL, &timeout);
+        select_status = select(largest_fd+1, &fd_in, NULL, &fd_except, &timeout);
+        printf("done select %d\n", select_status);
         if(select_status < 0){
             syslog(LOG_NOTICE, "error occured with select\n");
             break;
         }else if(0 == select_status){
             //timeout
         }else{
+            if(FD_ISSET(k1_fd, &fd_except)){
+                lseek(k1_fd, 0, SEEK_SET);
+                read(k1_fd, &buf, 1);
+                current_period -= delta_period;
+                update_timer(timer_on_fd, current_period, 0);
+                update_timer(timer_off_fd, current_period, DUTY_CYCLE_ON);
+            }else{}
+            if(FD_ISSET(k2_fd, &fd_except)){
+                lseek(k2_fd, 0, SEEK_SET);
+                read(k2_fd, &buf, 1);
+                current_period = default_period;
+                update_timer(timer_on_fd, current_period, 0);
+                update_timer(timer_off_fd, current_period, DUTY_CYCLE_ON);
+            }else{}
+            if(FD_ISSET(k3_fd, &fd_except)){
+                lseek(k3_fd, 0, SEEK_SET);
+                read(k3_fd, &buf, 1);
+                current_period += delta_period;
+                update_timer(timer_on_fd, current_period, 0);
+                update_timer(timer_off_fd, current_period, DUTY_CYCLE_ON);
+            }else{}
             if(FD_ISSET(timer_on_fd, &fd_in)){
                 read(timer_on_fd, &tmp_long, sizeof(tmp_long));
                 write(led_fd, "1", 1);
@@ -118,28 +140,6 @@ void select_process(long period){
             if(FD_ISSET(timer_off_fd, &fd_in)){
                 read(timer_off_fd, &tmp_long, sizeof(tmp_long));
                 write(led_fd, "0", 1);
-            }else{}
-            if(FD_ISSET(k1_fd, &fd_in)){
-                lseek(k1_fd, 0, SEEK_SET);
-                read(k1_fd, &buf, 1);
-                current_period -= delta_period;
-                update_timer(timer_on_fd, current_period, 0);
-                update_timer(timer_off_fd, current_period, DUTY_CYCLE_ON);
-            }else{}
-            if(FD_ISSET(k2_fd, &fd_in)){
-                lseek(k2_fd, 0, SEEK_SET);
-                read(k2_fd, &buf, 1);
-                lseek(k2_fd, 0, SEEK_SET);
-                current_period = default_period;
-                update_timer(timer_on_fd, current_period, 0);
-                update_timer(timer_off_fd, current_period, DUTY_CYCLE_ON);
-            }else{}
-            if(FD_ISSET(k3_fd, &fd_in)){
-                lseek(k3_fd, 0, SEEK_SET);
-                read(k3_fd, &buf, 1);
-                current_period += delta_period;
-                update_timer(timer_on_fd, current_period, 0);
-                update_timer(timer_off_fd, current_period, DUTY_CYCLE_ON);
             }else{}
         }
     }
