@@ -43,10 +43,17 @@ int open_switch(const char *pin, const char *gpio_path){
     write(f, "in", 3);
     close(f);
 
+    // config interrupt 
+    char gpio_int[50];
+    snprintf(gpio_int, 50, "%s/edge", gpio_path);
+    f = open(gpio_int, O_WRONLY);
+    write(f, "rising", 7);
+    close(f);
+
     char gpio_value[50];
     snprintf(gpio_value, 50, "%s/value",  gpio_path);
     // open gpio value attribute
-    f = open(gpio_value, O_RDONLY);
+    f = open(gpio_value, O_RDONLY | O_NONBLOCK);
     return f;
 
 }

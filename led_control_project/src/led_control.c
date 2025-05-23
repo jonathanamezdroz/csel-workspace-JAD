@@ -23,7 +23,7 @@
  * Date:    07.11.2018
  */
 
-#include "silly_led_control.h"
+#include "led_control.h"
 
 int open_led(){
     // unexport pin out of sysfs (reinitialization)
