@@ -1,0 +1,8 @@
+build/*
+user_app/build/*
+module/build/*
+module/mini_project.*
+module/*.o
+module/.*
+module/modules.order
+module/Module.*

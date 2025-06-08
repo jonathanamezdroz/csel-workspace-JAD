@@ -1,3 +1,4 @@
+
 /**
  * Copyright 2018 University of Applied Sciences Western Switzerland / Fribourg
  *
@@ -23,26 +24,28 @@
  * Date:    07.11.2018
  */
 
-#include "silly_led_control.h"
+#include "led_control.h"
 
-int open_led(){
-    // unexport pin out of sysfs (reinitialization)
+int open_led(char *led, char *gpio_led){    // unexport pin out of sysfs (reinitialization)
     int f = open(GPIO_UNEXPORT, O_WRONLY);
-    write(f, LED, strlen(LED));
+    write(f, led, strlen(led));
     close(f);
 
     // export pin to sysfs
     f = open(GPIO_EXPORT, O_WRONLY);
-    write(f, LED, strlen(LED));
+    write(f, led, strlen(led));
     close(f);
 
+    char gpio_dir[50];
+    snprintf(gpio_dir, 50, "%s/direction", gpio_led);
     // config pin
-    f = open(GPIO_LED "/direction", O_WRONLY);
+    f = open(gpio_dir, O_WRONLY);
     write(f, "out", 3);
     close(f);
 
+    char gpio_value[50];
+    snprintf(gpio_value, 50, "%s/value", gpio_led);
     // open gpio value attribute
-    f = open(GPIO_LED "/value", O_RDWR);
+    f = open(gpio_value, O_RDWR);
     return f;
 }
-

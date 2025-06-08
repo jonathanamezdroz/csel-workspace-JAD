@@ -25,14 +25,9 @@
 
 #include "switch_control.h"
 
-int open_switch(const char *pin, const char *gpio_path){
-    // unexport pin out of sysfs (reinitialization)
-    int f = open(GPIO_UNEXPORT, O_WRONLY);
-    write(f, pin, strlen(pin));
-    close(f);
-
+extern int open_switch(const char *pin, const char *gpio_path){
     // export pin to sysfs
-    f = open(GPIO_EXPORT, O_WRONLY);
+    int f = open(GPIO_EXPORT, O_WRONLY);
     write(f, pin, strlen(pin));
     close(f);
 
@@ -43,10 +38,55 @@ int open_switch(const char *pin, const char *gpio_path){
     write(f, "in", 3);
     close(f);
 
+    char gpio_edge[50];
+    snprintf(gpio_edge, 50, "%s/edge", gpio_path);
+    f = open(gpio_edge, O_WRONLY);
+    if(f == -1){
+        perror("open");
+        return -1;
+    }
+    write(f, "rising", 7);
+
+    close(f);
+
     char gpio_value[50];
     snprintf(gpio_value, 50, "%s/value",  gpio_path);
     // open gpio value attribute
     f = open(gpio_value, O_RDONLY);
     return f;
 
+}
+
+extern int close_switch(const char *pin){
+    // unexport pin out of sysfs (reinitialization)
+    int f = open(GPIO_UNEXPORT, O_WRONLY);
+    write(f, pin, strlen(pin));
+    close(f);
+    
+    return f;
+}
+
+extern int read_switch(int fd){
+
+    char buff[5];
+    // Réinitialiser la position du curseur de lecture
+    if (lseek(fd, 0, SEEK_SET) == -1) {
+        perror("lseek");
+        return -1;
+    }
+
+    while(42){ // J'ai perdu!
+        ssize_t nr = read (fd, buff, sizeof(buff) -1);
+        if (nr == 0) break;  // all data have been read
+        if (nr == -1) {
+            if (errno == EINTR) continue;  // continue reading
+            char estr[100] = {
+                [0] = 0,
+            };
+            strerror_r(errno, estr, sizeof(estr) - 1);
+            fprintf(stderr, "ERROR: %s\n", estr);
+            break;  // stop reading
+        }
+    }
+    return buff[0] - '0'; // convert char to int
 }
